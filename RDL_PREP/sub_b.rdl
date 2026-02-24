@@ -1,0 +1,6 @@
+`include "regs.rdl"
+
+addrmap sub_b_t #(string ext_hdl_path ) {
+    name = "Sub Block B";
+    regs_level_t #(.ext_hdl_path("BLOCK")) regs_inst @ 0x0; 
+};

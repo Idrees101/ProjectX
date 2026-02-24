@@ -1,0 +1,6 @@
+// top.rdl
+`include "sub_a.rdl"
+
+addrmap top_t {
+    sub_a_t #(.ext_hdl_path("top")) sub_a_inst @ 0x1000; // Nesting Sub-A inside Top
+};

@@ -1,0 +1,6 @@
+// sub_a.rdl
+`include "sub_b.rdl"
+
+addrmap sub_a_t #(string ext_hdl_path) {
+    sub_b_t #(.ext_hdl_path( "sub_a")) sub_b_inst @ 0x100; // Nesting Sub-B inside Sub-A
+};

@@ -1,0 +1,31 @@
+// regs_level.rdl
+addrmap regs_level_t #(string ext_hdl_path ) {
+    name = "Register Leaf Node";
+
+    reg control_reg {
+        name = "Device Control";
+        desc = "Main control register for the peripheral";
+        
+        field { 
+            hw=rw; sw=rw; 
+            desc="Enable bit";
+        } en[0:0] = 0;
+
+        field { 
+            hw=r; sw=rw; 
+            desc="Operating Mode";
+        } mode[3:1] = 0;
+    };
+
+    reg status_reg {
+        name = "Device Status";
+        hdl_path = {ext_hdl_path, "STAT"};
+
+        field { hw=w; sw=r; } ready[0:0] = 0;
+        field { hw=w; sw=r; } error[1:1] = 0;
+    };
+
+    // Instantiate them
+    control_reg CTRL @ 0x0;
+    status_reg  STAT @ 0x4;
+};
