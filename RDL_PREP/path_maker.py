@@ -82,34 +82,40 @@ def main():
 
             current_reg = None
             reg_has_hdl = False
+            hdl_name = None
+            instance_name = []
+            final_defines = []
 
             with open(curr_file, "r") as f:
                 for line in f:
                     clean_line = line.split("//")[0].strip()
+
                     reg_match = reg_pattern.match(clean_line)
                     if reg_match:
                         current_reg = reg_match.group(1)
-                        print(f"{current_reg}")
-                        reg_has_hdl = False  
+                        reg_has_hdl = False
+                        hdl_name = None
                         continue
 
-                    if 'hdl_path' in clean_line and current_reg:
+                    if current_reg:
                         hdl_match = hdl_pattern.search(clean_line)
                         if hdl_match:
                             reg_has_hdl = True
                             hdl_name = hdl_match.group(1)
                             print(f"{hdl_name}")
+                            continue
 
                     if reg_has_hdl:
                         inst_match = instance_pattern.match(clean_line)
-                        print(f"{inst_match}")
                         if inst_match:
-                            instance_name.append((inst_match.group(1), inst_match.group(2)))
-                            for block, inst in instance_name:    
-                                final_defines.append((inst, f"{curr_path}.{hdl_name}"))
-                                print(f"{final_defines}")
+                            inst_tuple = (inst_match.group(1), inst_match.group(2))
+                            print(f"{current_reg}")
+                            if(inst_tuple[0] == current_reg):
+                                instance_name.append(inst_tuple)
+                                final_defines.append((inst_tuple[1], f"{curr_path}.{hdl_name}"))
                                 current_reg = None
                                 reg_has_hdl = False
+                                hdl_name = None
 
         else:
             children = extract_sub_instances(curr_file)
@@ -130,7 +136,7 @@ def main():
         replaced = False
         for i, line in enumerate(lines):
             if line.strip().startswith(f"{reg_name}.add_hdl_path_slice"):
-                lines[i] = f'{reg_name}.add_hdl_path_slice("{full_path}", -1, -1)\n'
+                lines[i] = f'            {reg_name}.add_hdl_path_slice("{full_path}", -1, -1)\n'
                 replaced = True
                 break
         if not replaced:
