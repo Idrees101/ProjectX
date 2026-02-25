@@ -78,7 +78,7 @@ def main():
         if has_register(curr_file):
             reg_pattern = re.compile(r'^\s*reg\s+(\w+)')
             hdl_pattern = re.compile(r'hdl_path\s*=\s*\{.*"([\w.]+)"\s*\}')
-            instance_pattern = re.compile(r"^(?:\w+\s+)?(\w+)\s+(\w+)\s*@")
+            instance_pattern = re.compile(r"^(?:\w+\s+)?(\w+)\s+(\w+)(?:\[(\d+)\])?\s+@")
 
             reg_to_hdl = {}
             reg_to_inst = {}
@@ -118,19 +118,29 @@ def main():
                     print(f"{queue}")
 
     output_file = ROOT_DIR + "/" + OUT_FILE
-    pattern_y = re.compile(r"(\w+)\.add_hdl_path_slice")
-
     if os.path.exists(output_file):
         with open(output_file, "r") as f:
             lines = f.readlines()
 
     for reg_name, full_path in final_defines:
         replaced = False
+        search_pattern = re.compile(rf"\b{reg_name}\s*(\[[^\]]+\])?\.add_hdl_path_slice\b")
+        print(f"DEBUG: Searching for pattern: {search_pattern.pattern}")
         for i, line in enumerate(lines):
-            if line.strip().startswith(f"{reg_name}.add_hdl_path_slice"):
-                lines[i] = f'            {reg_name}.add_hdl_path_slice("{full_path}", -1, -1)\n'
-                replaced = True
-                break
+            match = search_pattern.search(line)
+            if match:
+                print(f"{match}")
+                array_part = match.group(1)
+                print(f"{array_part}")
+                if array_part is not None:
+                    lines[i] = f'                {reg_name}[i0].add_hdl_path_slice("{full_path}", -1, -1)\n'
+                    replaced = True
+                    break
+                else:
+                    lines[i] = f'            {reg_name}.add_hdl_path_slice("{full_path}", -1, -1)\n'
+                    replaced = True
+                    break
+
         if not replaced:
             lines.append(f'{reg_name}.add_hdl_path_slice("{full_path}", -1, -1)\n')
 
