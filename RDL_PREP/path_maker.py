@@ -75,15 +75,17 @@ def main():
             continue
         visited_path.add(curr_path)
 
+        current_reg = []
+        inst_tuple = []
+        inst_tuple_1 = []
+        hdl_name = []
+        reg_has_hdl = False
+
         if has_register(curr_file):
             reg_pattern = re.compile(r'^\s*reg\s+(\w+)')
             hdl_pattern = re.compile(r'hdl_path\s*=\s*\{.*"([\w.]+)"\s*\}')
-            instance_pattern = re.compile(r"^\s*(\w+)\s*(\w+)\s*@")
+            instance_pattern = re.compile(r"^(?:\w+\s+)?(\w+)\s+(\w+)\s*@")
 
-            current_reg = None
-            reg_has_hdl = False
-            hdl_name = None
-            instance_name = []
             final_defines = []
 
             with open(curr_file, "r") as f:
@@ -92,31 +94,26 @@ def main():
 
                     reg_match = reg_pattern.match(clean_line)
                     if reg_match:
-                        current_reg = reg_match.group(1)
+                        current_reg.append(reg_match.group(1))
                         reg_has_hdl = False
-                        hdl_name = None
                         continue
 
                     if current_reg:
                         hdl_match = hdl_pattern.search(clean_line)
                         if hdl_match:
                             reg_has_hdl = True
-                            hdl_name = hdl_match.group(1)
-                            print(f"{hdl_name}")
+                            hdl_name.append(hdl_match.group(1))
                             continue
 
                     if reg_has_hdl:
                         inst_match = instance_pattern.match(clean_line)
                         if inst_match:
-                            inst_tuple = (inst_match.group(1), inst_match.group(2))
-                            print(f"{current_reg}")
-                            if(inst_tuple[0] == current_reg):
-                                instance_name.append(inst_tuple)
-                                final_defines.append((inst_tuple[1], f"{curr_path}.{hdl_name}"))
-                                current_reg = None
-                                reg_has_hdl = False
-                                hdl_name = None
-
+                            inst_tuple.append(inst_match.group(1))
+                            inst_tuple_1.append(inst_match.group(2))
+                            if(inst_tuple.pop(0) == current_reg.pop(0)):
+                                final_defines.append((inst_tuple_1.pop(0), f"{curr_path}.{hdl_name.pop(0)}"))
+                                
+                                
         else:
             children = extract_sub_instances(curr_file)
             for comp_type, inst_name in children:
